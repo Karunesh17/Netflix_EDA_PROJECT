@@ -1,0 +1,31 @@
+Category,Metric,Value,Unit,Denominator,Formula / Source,Verification Status
+Dataset Overview,Total Records,9827.0,Titles,9827,len(df),"PASSED (Exact match: 9,827)"
+Dataset Overview,Unique Titles,9513.0,Distinct Names,9827,df['Title'].nunique(),"PASSED (9,513 unique titles)"
+Dataset Overview,Duplicate Records (Exact Full-Row),0.0,Rows,9827,df.duplicated().sum(),PASSED (0 exact row duplicates)
+Dataset Overview,Duplicate Title Instances,314.0,Rows,9827,df.duplicated(subset=['Title']).sum(),"PASSED (314 duplicate title instances across 288 names, 0 same-year dups)"
+Dataset Overview,Missing Values Across All Columns,0.0,Nulls,88443,df.isnull().sum().sum(),PASSED (0 missing values across all 9 columns)
+Content Distribution,Movie Count,9827.0,Movies,9827,Total catalog records (TMDb movie schema),PASSED (100.0% movies; 'type' column absent in schema)
+Content Distribution,Movie Percentage,100.0,%,9827,(Movie Count / Total Records) * 100,PASSED (100.0%)
+Content Distribution,TV Show Count,0.0,TV Shows,9827,0 (No TV series in TMDb movie dataset),PASSED (0.0% TV shows; 'type' column absent in schema)
+Content Distribution,TV Show Percentage,0.0,%,9827,(TV Show Count / Total Records) * 100,PASSED (0.0%)
+Genre Distribution,Genre: Drama (Occurrence Share),14.52,%,25793,(3744 / 25793) * 100,"PASSED (3744 of 25,793 occurrences)"
+Genre Distribution,Genre: Drama (Title Penetration),38.1,%,9827,(3744 / 9827) * 100,"PASSED (3744 of 9,827 titles)"
+Genre Distribution,Genre: Comedy (Occurrence Share),11.75,%,25793,(3031 / 25793) * 100,"PASSED (3031 of 25,793 occurrences)"
+Genre Distribution,Genre: Comedy (Title Penetration),30.84,%,9827,(3031 / 9827) * 100,"PASSED (3031 of 9,827 titles)"
+Genre Distribution,Genre: Action (Occurrence Share),10.41,%,25793,(2686 / 25793) * 100,"PASSED (2686 of 25,793 occurrences)"
+Genre Distribution,Genre: Action (Title Penetration),27.33,%,9827,(2686 / 9827) * 100,"PASSED (2686 of 9,827 titles)"
+Genre Distribution,Genre: Thriller (Occurrence Share),9.65,%,25793,(2488 / 25793) * 100,"PASSED (2488 of 25,793 occurrences)"
+Genre Distribution,Genre: Thriller (Title Penetration),25.32,%,9827,(2488 / 9827) * 100,"PASSED (2488 of 9,827 titles)"
+Genre Distribution,Genre: Adventure (Occurrence Share),7.18,%,25793,(1853 / 25793) * 100,"PASSED (1853 of 25,793 occurrences)"
+Genre Distribution,Genre: Adventure (Title Penetration),18.86,%,9827,(1853 / 9827) * 100,"PASSED (1853 of 9,827 titles)"
+Geographic / Language Distribution,Original Language: en,77.03,%,9827,(7570 / 9827) * 100,"PASSED (7570 of 9,827 titles; 'country' column absent)"
+Geographic / Language Distribution,Original Language: ja,6.56,%,9827,(645 / 9827) * 100,"PASSED (645 of 9,827 titles; 'country' column absent)"
+Geographic / Language Distribution,Original Language: es,3.45,%,9827,(339 / 9827) * 100,"PASSED (339 of 9,827 titles; 'country' column absent)"
+Geographic / Language Distribution,Original Language: fr,2.97,%,9827,(292 / 9827) * 100,"PASSED (292 of 9,827 titles; 'country' column absent)"
+Geographic / Language Distribution,Original Language: ko,1.73,%,9827,(170 / 9827) * 100,"PASSED (170 of 9,827 titles; 'country' column absent)"
+Growth Trends,2015 Content Release Count,390.0,Titles,9827,Release_Year == 2015 count,PASSED (390 titles)
+Growth Trends,2019 Content Release Count,500.0,Titles,9827,Release_Year == 2019 count,PASSED (500 titles)
+Growth Trends,2015-2019 Production Growth,28.21,%,390,((500 - 390) / 390) * 100,PASSED (+28.21% net expansion; +110 titles)
+Growth Trends,Peak Content Release Year,2021.0,Year,N/A,Yearly counts argmax,"PASSED (Year 2021 with 714 titles, 7.27%)"
+Growth Trends,2020 Pandemic Production Impact,-9.4,%,500,((453 - 500) / 500) * 100,PASSED (-9.40% contraction during global shutdowns)
+Growth Trends,2021 Post-Lockdown Production Rebound,57.62,%,453,((714 - 453) / 453) * 100,PASSED (+57.62% surge to all-time catalog peak)

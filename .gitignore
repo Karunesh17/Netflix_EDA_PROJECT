@@ -1,0 +1,46 @@
+# ==============================================================================
+# .gitignore
+# TMDb Movie Analytics Project
+# ==============================================================================
+
+# Virtual Environments (Excluded from version control)
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Previous / Legacy Exploratory Notebook (Preserved locally, excluded from git)
+src.ipynb
+
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Testing and coverage artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Jupyter / IPython checkpoints
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+
+# IDE and OS-generated files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary databases / journals
+*.db-journal
+*.sqlite3-journal
