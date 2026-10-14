@@ -1,8 +1,7 @@
 """
 dashboard/app.py
-TMDb Movie Data Analysis — Interactive Analytics Dashboard
-Built with Streamlit & Plotly
-Author: Data Analyst Portfolio
+Interactive movie data dashboard built with Streamlit and Plotly.
+I created this to visualize trends in movie releases, genres, languages, and audience ratings.
 """
 
 import os
@@ -107,8 +106,8 @@ with st.sidebar:
     )
     
     st.markdown("---")
-    st.caption("📌 **Dataset:** 9,827 popular films from The Movie Database (TMDb).")
-    st.caption("Developed with Python, Pandas, Streamlit & Plotly.")
+    st.caption("Dataset: 9,827 movies from The Movie Database (TMDb).")
+    st.caption("Built with Python, Pandas, Streamlit & Plotly.")
 
 # 5. Apply Filters
 filtered_df = df_movies[
@@ -127,11 +126,11 @@ if selected_genres:
 filtered_genre_df = df_genres[df_genres['movie_id'].isin(filtered_df['movie_id'])]
 
 # 6. Main Dashboard View
-st.title("TMDb Movie Data Analysis Dashboard")
+st.title("TMDb Movie Data Explorer")
 st.markdown("""
 <div class="callout-box">
-    <b>Portfolio Overview:</b> Exploratory analysis across <b>9,827 films</b> spanning 12 decades (1902–2024). 
-    Demonstrates data cleaning (handling 100 zero-vote unrated films), multi-label genre normalization, and visual business insights.
+    I built this dashboard to interactively explore 9,827 movies from TMDb.
+    Use the sidebar filters to slice the data by release years, genres, or languages, and see how the metrics and charts update.
 </div>
 """, unsafe_allow_html=True)
 
@@ -149,7 +148,7 @@ with kpi1:
 with kpi2:
     st.markdown(f"""
     <div class="metric-card">
-        <div class="metric-title">Number of Genres</div>
+        <div class="metric-title">Distinct Genres</div>
         <div class="metric-value">{filtered_genre_df['genre'].nunique()}</div>
     </div>
     """, unsafe_allow_html=True)
@@ -160,7 +159,7 @@ with kpi3:
     score_str = f"{avg_score:.2f} / 10" if not np.isnan(avg_score) else "N/A"
     st.markdown(f"""
     <div class="metric-card">
-        <div class="metric-title">Clean Average Rating</div>
+        <div class="metric-title">Avg Rating (Rated Titles)</div>
         <div class="metric-value">{score_str}</div>
     </div>
     """, unsafe_allow_html=True)
@@ -276,7 +275,7 @@ if len(rated_sub) > 0:
         height=420
     )
     st.plotly_chart(fig_scatter, use_container_width=True)
-    st.caption("Spearman Rank Correlation between Popularity and Rating is +0.127 (weak correlation), showing that commercial buzz does not necessarily reflect high ratings.")
+    st.caption("Spearman rank correlation is +0.13, showing that more popular or heavily marketed movies do not always have higher audience ratings.")
 else:
     st.info("No records to display for scatter analysis.")
 

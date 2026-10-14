@@ -1,35 +1,32 @@
--- ==============================================================================
--- TMDb Movie Data Analysis — SQL Analytical Queries
--- Database Engine: SQLite (data/movies_analytics.db)
--- Author: Data Analyst Portfolio
--- ==============================================================================
+-- TMDb Movie Data Analysis - SQL Queries
+-- Database: SQLite (data/movies_analytics.db)
+-- These queries answer specific questions about movie releases, genres, languages, and ratings.
 
--- ------------------------------------------------------------------------------
--- QUERY 1: Catalog Volume & Clean Average Rating
--- Analytical Question: What is the total film volume, and what is the clean 
--- average rating when excluding unrated films (Vote_Count == 0)?
--- ------------------------------------------------------------------------------
+-- -----------------------------------------------------------------------------
+-- Query 1: Total movies, unique titles, and average rating
+-- Check overall catalog size and calculate the average rating only for movies
+-- that have at least one vote (excluding unrated movies where Vote_Count = 0).
+-- -----------------------------------------------------------------------------
 SELECT 
     COUNT(*) AS total_movies,
     COUNT(DISTINCT Title) AS unique_titles,
     SUM(CASE WHEN Rating_Status = 'Unrated' THEN 1 ELSE 0 END) AS unrated_movies,
-    ROUND(AVG(CASE WHEN Rating_Status = 'Rated' THEN Vote_Average ELSE NULL END), 2) AS clean_avg_rating,
+    ROUND(AVG(CASE WHEN Rating_Status = 'Rated' THEN Vote_Average ELSE NULL END), 2) AS avg_rating_rated_only,
     ROUND(AVG(Popularity), 2) AS avg_popularity,
     MIN(Release_Year) AS earliest_year,
     MAX(Release_Year) AS latest_year
 FROM movies;
 
 
--- ------------------------------------------------------------------------------
--- QUERY 2: Top 10 Genres by Film Title Volume
--- Analytical Question: Which 10 movie genres have the highest title penetration
--- across the catalog?
--- Demonstrates: Relational JOIN on normalized bridge table, GROUP BY, ORDER BY.
--- ------------------------------------------------------------------------------
+-- -----------------------------------------------------------------------------
+-- Query 2: Top 10 most common genres
+-- Join the movies table with the normalized movie_genres bridge table to count
+-- how many movies belong to each genre and calculate their percentage share.
+-- -----------------------------------------------------------------------------
 SELECT 
     mg.genre,
     COUNT(DISTINCT m.movie_id) AS movie_count,
-    ROUND((COUNT(DISTINCT m.movie_id) * 100.0) / (SELECT COUNT(*) FROM movies), 2) AS title_penetration_pct,
+    ROUND((COUNT(DISTINCT m.movie_id) * 100.0) / (SELECT COUNT(*) FROM movies), 2) AS percentage_of_catalog,
     ROUND(AVG(CASE WHEN m.Rating_Status = 'Rated' THEN m.Vote_Average ELSE NULL END), 2) AS avg_rating
 FROM movie_genres mg
 JOIN movies m ON mg.movie_id = m.movie_id
@@ -38,12 +35,11 @@ ORDER BY movie_count DESC
 LIMIT 10;
 
 
--- ------------------------------------------------------------------------------
--- QUERY 3: Linguistic Breakdown & Market Concentration
--- Analytical Question: How is the catalog divided between English and major
--- international languages?
--- Demonstrates: Conditional CASE WHEN grouping and percentage calculations.
--- ------------------------------------------------------------------------------
+-- -----------------------------------------------------------------------------
+-- Query 3: Movies by language (English vs. international)
+-- Group movies into English, top non-English languages, and other languages
+-- to see the language breakdown.
+-- -----------------------------------------------------------------------------
 SELECT 
     CASE 
         WHEN Original_Language = 'en' THEN 'English'
@@ -51,23 +47,23 @@ SELECT
         WHEN Original_Language = 'es' THEN 'Spanish'
         WHEN Original_Language = 'fr' THEN 'French'
         WHEN Original_Language = 'ko' THEN 'Korean'
-        ELSE 'Other International'
+        ELSE 'Other Languages'
     END AS language_group,
-    COUNT(*) AS title_count,
-    ROUND((COUNT(*) * 100.0) / (SELECT COUNT(*) FROM movies), 2) AS catalog_share_pct
+    COUNT(*) AS movie_count,
+    ROUND((COUNT(*) * 100.0) / (SELECT COUNT(*) FROM movies), 2) AS percentage_share
 FROM movies
 GROUP BY language_group
-ORDER BY title_count DESC;
+ORDER BY movie_count DESC;
 
 
--- ------------------------------------------------------------------------------
--- QUERY 4: Annual Release Velocity & Production Trends (2010–2022)
--- Analytical Question: How did annual movie release counts trend over the past decade?
--- Demonstrates: WHERE range filtering, GROUP BY, aggregations.
--- ------------------------------------------------------------------------------
+-- -----------------------------------------------------------------------------
+-- Query 4: Movie releases per year (2010 to 2022)
+-- Look at how movie releases, average ratings, and popularity trended over the
+-- last decade.
+-- -----------------------------------------------------------------------------
 SELECT 
     Release_Year,
-    COUNT(*) AS annual_releases,
+    COUNT(*) AS movies_released,
     ROUND(AVG(CASE WHEN Rating_Status = 'Rated' THEN Vote_Average ELSE NULL END), 2) AS avg_rating,
     ROUND(AVG(Popularity), 1) AS avg_popularity
 FROM movies
@@ -76,50 +72,48 @@ GROUP BY Release_Year
 ORDER BY Release_Year ASC;
 
 
--- ------------------------------------------------------------------------------
--- QUERY 5: Year-over-Year (YoY) Growth Rate Around External Shocks (2015–2021)
--- Analytical Question: What was the annual percentage growth leading up to the 
--- 2020 pandemic and during the 2021 backlog recovery?
--- Demonstrates: Common Table Expression (CTE) and LAG() window function.
--- ------------------------------------------------------------------------------
-WITH annual_counts AS (
+-- -----------------------------------------------------------------------------
+-- Query 5: Year-over-year release growth (using LAG window function)
+-- Use a CTE and LAG() to calculate the annual change and percentage growth 
+-- in releases from 2015 to 2021 (showing the 2020 drop and 2021 rebound).
+-- -----------------------------------------------------------------------------
+WITH annual_releases AS (
     SELECT 
         Release_Year,
-        COUNT(*) AS releases
+        COUNT(*) AS total_releases
     FROM movies
     WHERE Release_Year BETWEEN 2014 AND 2022
     GROUP BY Release_Year
 ),
-yoy_calculations AS (
+growth_calc AS (
     SELECT 
         Release_Year,
-        releases,
-        LAG(releases, 1) OVER (ORDER BY Release_Year) AS prev_year_releases,
-        releases - LAG(releases, 1) OVER (ORDER BY Release_Year) AS net_change,
+        total_releases,
+        LAG(total_releases, 1) OVER (ORDER BY Release_Year) AS previous_year_releases,
+        total_releases - LAG(total_releases, 1) OVER (ORDER BY Release_Year) AS net_difference,
         ROUND(
-            ((releases - LAG(releases, 1) OVER (ORDER BY Release_Year)) * 100.0) 
-            / LAG(releases, 1) OVER (ORDER BY Release_Year), 
+            ((total_releases - LAG(total_releases, 1) OVER (ORDER BY Release_Year)) * 100.0) 
+            / LAG(total_releases, 1) OVER (ORDER BY Release_Year), 
             2
-        ) AS yoy_growth_pct
-    FROM annual_counts
+        ) AS yoy_growth_percent
+    FROM annual_releases
 )
 SELECT 
     Release_Year,
-    releases,
-    COALESCE(prev_year_releases, 0) AS prev_year_releases,
-    COALESCE(net_change, 0) AS net_change,
-    COALESCE(yoy_growth_pct, 0.0) AS yoy_growth_pct
-FROM yoy_calculations
+    total_releases,
+    COALESCE(previous_year_releases, 0) AS previous_year_releases,
+    COALESCE(net_difference, 0) AS net_difference,
+    COALESCE(yoy_growth_percent, 0.0) AS yoy_growth_percent
+FROM growth_calc
 WHERE Release_Year >= 2015
 ORDER BY Release_Year ASC;
 
 
--- ------------------------------------------------------------------------------
--- QUERY 6: Top 5 Highest-Rated Blockbusters (Minimum 1,000 Votes)
--- Analytical Question: Which films achieved the highest audience acclaim with
--- substantial consensus (at least 1,000 user reviews)?
--- Demonstrates: Multi-condition WHERE filtering, ORDER BY multi-column sort.
--- ------------------------------------------------------------------------------
+-- -----------------------------------------------------------------------------
+-- Query 6: Top 5 highest rated movies with at least 1,000 votes
+-- Filter for movies with a minimum number of votes so that movies with only 1 or 2
+-- 10/10 ratings do not distort the top rankings.
+-- -----------------------------------------------------------------------------
 SELECT 
     Title,
     Release_Year,
@@ -133,20 +127,20 @@ ORDER BY Vote_Average DESC, Vote_Count DESC
 LIMIT 5;
 
 
--- ------------------------------------------------------------------------------
--- QUERY 7: Top 5 Most Common Genre Pairings (Multi-Genre Synergy)
--- Analytical Question: Which distinct genres are most frequently paired together
--- on the same film?
--- Demonstrates: Relational self-join with inequality condition.
--- ------------------------------------------------------------------------------
+-- -----------------------------------------------------------------------------
+-- Query 7: Most common genre pairings (self-join on movie_genres)
+-- Find which two genres appear together most often on the same movie.
+-- Using g1.genre < g2.genre prevents duplicate combinations like (Action, Drama)
+-- and (Drama, Action).
+-- -----------------------------------------------------------------------------
 SELECT 
-    g1.genre AS genre_a,
-    g2.genre AS genre_b,
-    COUNT(*) AS pair_frequency
+    g1.genre AS first_genre,
+    g2.genre AS second_genre,
+    COUNT(*) AS times_paired_together
 FROM movie_genres g1
 JOIN movie_genres g2 
   ON g1.movie_id = g2.movie_id 
  AND g1.genre < g2.genre
 GROUP BY g1.genre, g2.genre
-ORDER BY pair_frequency DESC
+ORDER BY times_paired_together DESC
 LIMIT 5;
